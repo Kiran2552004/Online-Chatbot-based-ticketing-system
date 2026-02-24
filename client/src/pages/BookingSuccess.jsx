@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../services/api';
@@ -9,8 +9,11 @@ const BookingSuccess = () => {
   const navigate = useNavigate();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
+  const verifyAttempted = useRef(false);
 
   useEffect(() => {
+    if (verifyAttempted.current) return;
+    verifyAttempted.current = true;
     const verifyPayment = async () => {
       const sessionId = searchParams.get('session_id');
       const bookingId = searchParams.get('booking_id');
