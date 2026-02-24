@@ -1,14 +1,6 @@
-// Load environment variables FIRST, before any other imports
+// Load environment variables FIRST
 import dotenv from 'dotenv';
-import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
-
-// Get the directory of the current module
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
-
-// Load .env file from server directory
-dotenv.config({ path: join(__dirname, '.env') });
+dotenv.config();
 
 // Verify critical environment variables are loaded
 console.log('📋 Environment variables check:');
@@ -19,13 +11,11 @@ console.log('  EMAIL_USER:', process.env.EMAIL_USER ? '✅ Loaded' : '⚠️  Mi
 console.log('  EMAIL_PASS:', process.env.EMAIL_PASS ? '✅ Loaded' : '⚠️  Missing (emails will be skipped)');
 
 if (!process.env.STRIPE_SECRET_KEY) {
-  console.error('❌ ERROR: STRIPE_SECRET_KEY is required but not found in .env file');
+  console.error('❌ ERROR: STRIPE_SECRET_KEY is required but not found');
 }
 
 if (!process.env.GEMINI_API_KEY || process.env.GEMINI_API_KEY.trim() === '') {
   console.warn('⚠️  WARNING: GEMINI_API_KEY is missing or empty. Chatbot AI features will not work.');
-  console.warn('   Please get a valid API key from: https://makersuite.google.com/app/apikey');
-  console.warn('   Add it to your server/.env file as: GEMINI_API_KEY=your_api_key_here');
 }
 
 import express from 'express';
@@ -52,6 +42,7 @@ app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:5173',
   credentials: true,
 }));
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
@@ -92,6 +83,3 @@ const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
 });
-
-
-
