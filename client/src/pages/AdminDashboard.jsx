@@ -85,8 +85,9 @@ const AdminDashboard = () => {
 
   const handleDownloadPDF = (bookingId) => {
     const token = localStorage.getItem('token');
-    const url = `http://localhost:5000/api/tickets/${bookingId}`;
-    
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const url = `${API_URL}/tickets/${bookingId}`;
+
     fetch(url, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -215,11 +216,10 @@ const AdminDashboard = () => {
               onClick={() => setActiveTab(tab)}
               whileHover={{ scale: 1.05 }}
               whileTap={tap}
-              className={`px-6 py-3 font-semibold capitalize transition-all rounded-lg ${
-                activeTab === tab
+              className={`px-6 py-3 font-semibold capitalize transition-all rounded-lg ${activeTab === tab
                   ? 'text-purple-600 bg-purple-50 border-b-2 border-purple-600'
                   : 'text-gray-600 hover:text-gray-800 hover:bg-gray-50'
-              }`}
+                }`}
             >
               {tab}
             </motion.button>
@@ -329,13 +329,12 @@ const AdminDashboard = () => {
                         </td>
                         <td className="px-6 py-4">
                           <motion.span
-                            className={`px-2 py-1 text-xs font-semibold rounded ${
-                              booking.paymentStatus === 'paid'
+                            className={`px-2 py-1 text-xs font-semibold rounded ${booking.paymentStatus === 'paid'
                                 ? 'bg-green-100 text-green-800'
                                 : booking.paymentStatus === 'pending'
-                                ? 'bg-yellow-100 text-yellow-800'
-                                : 'bg-red-100 text-red-800'
-                            }`}
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
                             whileHover={{ scale: 1.1 }}
                           >
                             {booking.paymentStatus}
@@ -613,9 +612,8 @@ const AdminDashboard = () => {
                         <td className="px-6 py-4 text-sm">{u.phone || 'N/A'}</td>
                         <td className="px-6 py-4">
                           <motion.span
-                            className={`px-2 py-1 text-xs font-semibold rounded ${
-                              u.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
-                            }`}
+                            className={`px-2 py-1 text-xs font-semibold rounded ${u.role === 'admin' ? 'bg-purple-100 text-purple-800' : 'bg-gray-100 text-gray-800'
+                              }`}
                             whileHover={{ scale: 1.1 }}
                           >
                             {u.role}

@@ -44,7 +44,7 @@ const AdminPanel = () => {
 
   const groupBookingsByMuseum = () => {
     const grouped = {};
-    
+
     bookings.forEach((booking) => {
       const museumId = booking.museum?._id?.toString() || 'unknown';
       const museumName = booking.museum?.name || 'Unknown Museum';
@@ -72,8 +72,9 @@ const AdminPanel = () => {
 
   const handleDownloadPDF = (bookingId) => {
     const token = localStorage.getItem('token');
-    const url = `http://localhost:5000/api/tickets/${bookingId}`;
-    
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const url = `${API_URL}/tickets/${bookingId}`;
+
     fetch(url, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -290,13 +291,12 @@ const AdminPanel = () => {
                             </td>
                             <td className="px-6 py-4">
                               <motion.span
-                                className={`px-2 py-1 text-xs font-semibold rounded ${
-                                  booking.paymentStatus === 'paid'
+                                className={`px-2 py-1 text-xs font-semibold rounded ${booking.paymentStatus === 'paid'
                                     ? 'bg-green-100 text-green-800'
                                     : booking.paymentStatus === 'pending'
-                                    ? 'bg-yellow-100 text-yellow-800'
-                                    : 'bg-red-100 text-red-800'
-                                }`}
+                                      ? 'bg-yellow-100 text-yellow-800'
+                                      : 'bg-red-100 text-red-800'
+                                  }`}
                                 whileHover={{ scale: 1.1 }}
                               >
                                 {booking.paymentStatus}

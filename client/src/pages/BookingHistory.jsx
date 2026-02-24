@@ -35,8 +35,9 @@ const BookingHistory = () => {
 
   const handleDownloadPDF = (bookingId) => {
     const token = localStorage.getItem('token');
-    const url = `http://localhost:5000/api/tickets/${bookingId}`;
-    
+    const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+    const url = `${API_URL}/tickets/${bookingId}`;
+
     fetch(url, {
       headers: {
         'Authorization': `Bearer ${token}`,
@@ -146,7 +147,7 @@ const BookingHistory = () => {
                   <motion.div
                     className="absolute inset-0 bg-gradient-to-br from-purple-500/0 to-blue-500/0 group-hover:from-purple-500/5 group-hover:to-blue-500/5 transition-all duration-300"
                   />
-                  
+
                   <div className="relative z-10">
                     <div className="flex justify-between items-start mb-4">
                       <div className="flex-1">
@@ -156,13 +157,12 @@ const BookingHistory = () => {
                         <p className="text-sm text-gray-500 font-mono">{booking.bookingId}</p>
                       </div>
                       <motion.span
-                        className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                          booking.paymentStatus === 'paid'
+                        className={`px-3 py-1 rounded-full text-xs font-semibold ${booking.paymentStatus === 'paid'
                             ? 'bg-green-100 text-green-800'
                             : booking.paymentStatus === 'pending'
-                            ? 'bg-yellow-100 text-yellow-800'
-                            : 'bg-red-100 text-red-800'
-                        }`}
+                              ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-red-100 text-red-800'
+                          }`}
                         whileHover={{ scale: 1.1 }}
                       >
                         {booking.paymentStatus}
