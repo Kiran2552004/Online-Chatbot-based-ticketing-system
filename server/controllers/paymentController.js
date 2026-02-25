@@ -101,17 +101,22 @@ export const createCheckoutSession = async (req, res) => {
     });
   } catch (error) {
     console.error('Stripe error:', error);
-
-    // Only log the actual error for debugging
-    console.error('Stripe error details:', {
-      type: error.type,
-      message: error.message,
-      code: error.code
-    });
-
-    res.status(500).json({
-      success: false,
-      message: error.message || 'Error creating payment session. Please try again.'
+    
+    // Handle Stripe minimum amount error silently
+    if (error.type === 'StripeInvalidRequestError' && 
+        error.message && 
+        error.message.includes('at least 50 cents')) {
+      // Return a generic error without exposing Stripe's minimum requirement
+      return res.status(400).json({ 
+        success: false, 
+        code: 'PAYMENT_ERROR',
+        message: 'Unable to process payment for this amount. Please try booking more tickets or contact support.' 
+      });
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Error creating payment session. Please try again.' 
     });
   }
 };
@@ -138,22 +143,19 @@ export const verifyPayment = async (req, res) => {
         return res.status(404).json({ success: false, message: 'Booking not found' });
       }
 
-      // Atomically update the booking status to prevent race conditions
-      // from multiple immediate requests (like React Strict Mode double fetch)
-      let booking = await MuseumBooking.findOneAndUpdate(
-        { bookingId: bookingId, paymentStatus: { $ne: 'paid' } },
-        {
-          $set: {
-            paymentStatus: 'paid',
-            stripePaymentIntentId: sessionId
-          }
-        },
-        { new: true }
-      )
+      const booking = await MuseumBooking.findOne({ bookingId })
         .populate('museum', 'name location imageUrl')
         .populate('user', 'name email');
 
-      if (booking) {
+      if (!booking) {
+        return res.status(404).json({ success: false, message: 'Booking not found' });
+      }
+
+      // Update booking status if not already paid
+      if (booking.paymentStatus !== 'paid') {
+        booking.paymentStatus = 'paid';
+        booking.stripePaymentIntentId = sessionId;
+
         // Generate PDF ticket
         try {
           const user = await User.findById(booking.user._id || booking.user);
@@ -168,7 +170,7 @@ export const verifyPayment = async (req, res) => {
 
           // Set PDF URL
           booking.pdfUrl = `/api/tickets/${booking.bookingId}`;
-
+          
           await booking.save();
 
           // Send email with PDF attachment
@@ -197,16 +199,6 @@ export const verifyPayment = async (req, res) => {
               bookingId: booking.bookingId,
             });
           }
-        }
-      } else {
-        // If not updated, it means it's already paid or not found
-        // Fetch the existing booking to return it
-        booking = await MuseumBooking.findOne({ bookingId })
-          .populate('museum', 'name location imageUrl')
-          .populate('user', 'name email');
-
-        if (!booking) {
-          return res.status(404).json({ success: false, message: 'Booking not found' });
         }
       }
 
