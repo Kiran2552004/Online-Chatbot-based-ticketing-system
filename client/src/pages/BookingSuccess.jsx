@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../services/api';
@@ -9,8 +9,11 @@ const BookingSuccess = () => {
   const navigate = useNavigate();
   const [booking, setBooking] = useState(null);
   const [loading, setLoading] = useState(true);
+  const effectRan = useRef(false);
 
   useEffect(() => {
+    if (effectRan.current) return;
+
     const verifyPayment = async () => {
       const sessionId = searchParams.get('session_id');
       const bookingId = searchParams.get('booking_id');
@@ -19,6 +22,8 @@ const BookingSuccess = () => {
         navigate('/dashboard');
         return;
       }
+
+      effectRan.current = true;
 
       try {
         const response = await api.post('/payment/verify-payment', { sessionId });
@@ -33,7 +38,7 @@ const BookingSuccess = () => {
     };
 
     verifyPayment();
-  }, [searchParams]);
+  }, [searchParams, navigate]);
 
   if (loading) {
     return (
