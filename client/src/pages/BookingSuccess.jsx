@@ -2,7 +2,15 @@ import { useEffect, useState, useRef } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import api from '../services/api';
-import { zoomIn, fadeIn, slideUp, tap } from '../components/animations/motions';
+import { fadeIn, slideUp, tap } from '../components/animations/motions';
+import AnimatedBackground from '../components/AnimatedBackground';
+
+const DetailRow = ({ label, value }) => (
+  <div className="flex justify-between items-center py-3 border-b border-white/6 last:border-0">
+    <span className="text-green-400/80 text-sm">{label}</span>
+    <span className="font-semibold text-white text-sm text-right max-w-[60%]">{value}</span>
+  </div>
+);
 
 const BookingSuccess = () => {
   const [searchParams] = useSearchParams();
@@ -13,135 +21,105 @@ const BookingSuccess = () => {
 
   useEffect(() => {
     if (effectRan.current) return;
-
     const verifyPayment = async () => {
       const sessionId = searchParams.get('session_id');
-      const bookingId = searchParams.get('booking_id');
-
-      if (!sessionId) {
-        navigate('/dashboard');
-        return;
-      }
-
+      if (!sessionId) { navigate('/dashboard'); return; }
       effectRan.current = true;
-
       try {
-        const response = await api.post('/payment/verify-payment', { sessionId });
-        if (response.data.success) {
-          setBooking(response.data.data);
-        }
-      } catch (error) {
-        console.error('Error verifying payment:', error);
+        const res = await api.post('/payment/verify-payment', { sessionId });
+        if (res.data.success) setBooking(res.data.data);
+      } catch (err) {
+        console.error('Error verifying payment:', err);
       } finally {
         setLoading(false);
       }
     };
-
     verifyPayment();
   }, [searchParams, navigate]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 flex items-center justify-center">
+      <AnimatedBackground variant="green" className="flex items-center justify-center">
         <motion.div
           animate={{ rotate: 360 }}
           transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-          className="rounded-full h-16 w-16 border-4 border-green-200 border-t-green-600"
+          className="w-14 h-14 rounded-full border-4 border-emerald-500/30 border-t-emerald-500"
         />
-      </div>
+      </AnimatedBackground>
     );
   }
 
   return (
-    <motion.div
-      className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-blue-50 flex items-center justify-center p-4"
-      initial="hidden"
-      animate="show"
-      variants={fadeIn}
-    >
+    <AnimatedBackground variant="green" className="flex items-center justify-center p-4">
       <motion.div
-        className="bg-white/90 backdrop-blur-sm rounded-3xl shadow-2xl max-w-2xl w-full p-8 text-center border border-white/20"
-        variants={zoomIn}
+        initial={{ opacity: 0, scale: 0.88, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 180, damping: 18 }}
+        className="relative w-full max-w-lg rounded-3xl overflow-hidden"
+        style={{
+          background: 'rgba(4,18,8,0.85)',
+          border: '1px solid rgba(52,211,153,0.3)',
+          backdropFilter: 'blur(28px)',
+          boxShadow: '0 0 80px rgba(52,211,153,0.18), 0 40px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)',
+        }}
       >
-        <motion.div
-          className="text-7xl mb-6"
-          animate={{
-            scale: [1, 1.2, 1],
-            rotate: [0, 10, -10, 0],
-          }}
-          transition={{
-            duration: 0.5,
-            repeat: Infinity,
-            repeatDelay: 2,
-          }}
-        >
-          ✅
-        </motion.div>
-        <motion.h1
-          className="text-4xl font-bold text-gray-800 mb-4"
-          variants={slideUp}
-        >
-          Payment Successful!
-        </motion.h1>
-        <motion.p
-          className="text-lg text-gray-600 mb-8"
-          variants={fadeIn}
-        >
-          Your booking has been confirmed. You will receive a confirmation email shortly.
-        </motion.p>
+        {/* Glows */}
+        <div className="absolute -top-16 left-1/2 -translate-x-1/2 w-72 h-36 pointer-events-none"
+          style={{ background: 'radial-gradient(circle,rgba(52,211,153,0.3) 0%,transparent 70%)', filter: 'blur(24px)' }} />
+        <div className="absolute top-0 left-0 w-24 h-24 pointer-events-none" style={{ background: 'linear-gradient(135deg,rgba(52,211,153,0.25) 0%,transparent 60%)' }} />
+        <div className="absolute bottom-0 right-0 w-24 h-24 pointer-events-none" style={{ background: 'linear-gradient(315deg,rgba(99,102,241,0.15) 0%,transparent 60%)' }} />
 
-        {booking && (
+        {/* Header */}
+        <div className="relative p-8 text-center border-b border-white/8"
+          style={{ background: 'linear-gradient(135deg,rgba(52,211,153,0.1) 0%,rgba(99,102,241,0.06) 100%)' }}>
+          <div className="absolute bottom-0 left-8 right-8 h-px" style={{ background: 'linear-gradient(to right,transparent,rgba(52,211,153,0.5),rgba(99,102,241,0.4),transparent)' }} />
           <motion.div
-            className="bg-gradient-to-r from-green-50 to-emerald-50 rounded-2xl p-6 mb-6 text-left border-2 border-green-200"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
+            className="text-7xl mb-4 inline-block"
+            animate={{ scale: [1, 1.15, 1], rotate: [0, 8, -8, 0] }}
+            transition={{ duration: 0.6, repeat: Infinity, repeatDelay: 2.5 }}
           >
-            <h2 className="text-xl font-bold mb-4">Booking Details</h2>
-            <div className="space-y-3">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Booking ID:</span>
-                <span className="font-mono font-semibold text-purple-600">{booking.bookingId}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Museum:</span>
-                <span className="font-semibold">{booking.museum?.name}</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Date:</span>
-                <span className="font-semibold">
-                  {new Date(booking.date).toLocaleDateString('en-IN', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Tickets:</span>
-                <span className="font-semibold">{booking.ticketCount}</span>
-              </div>
-              <div className="flex justify-between border-t pt-3 mt-3">
-                <span className="text-gray-800 font-bold text-lg">Total Amount:</span>
-                <span className="font-bold text-green-600 text-xl">
-                  ₹{booking.amount.toLocaleString('en-IN')}
-                </span>
-              </div>
-            </div>
+            ✅
           </motion.div>
-        )}
+          <h1 className="text-3xl font-bold text-white mb-2">Payment Successful!</h1>
+          <p className="text-emerald-300 text-sm">Your booking is confirmed. A confirmation email is on its way.</p>
+        </div>
 
-        <motion.button
-          onClick={() => navigate('/dashboard')}
-          whileHover={{ scale: 1.05 }}
-          whileTap={tap}
-          className="bg-gradient-to-r from-green-500 via-emerald-500 to-blue-500 text-white px-10 py-4 rounded-xl font-bold hover:shadow-xl transition-all shadow-lg"
-        >
-          Go to Dashboard
-        </motion.button>
+        <div className="relative z-10 p-8">
+          {booking && (
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+              className="rounded-2xl p-5 mb-6"
+              style={{ background: 'rgba(52,211,153,0.07)', border: '1px solid rgba(52,211,153,0.2)' }}
+            >
+              <p className="text-xs font-bold uppercase tracking-widest text-emerald-400 mb-4">Booking Details</p>
+              <DetailRow label="Booking ID" value={<span className="font-mono text-emerald-300">{booking.bookingId}</span>} />
+              <DetailRow label="Museum" value={booking.museum?.name} />
+              <DetailRow label="Date" value={new Date(booking.date).toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })} />
+              <DetailRow label="Tickets" value={booking.ticketCount} />
+              <div className="flex justify-between items-center pt-3 mt-1">
+                <span className="text-white font-bold">Total Amount</span>
+                <span className="text-2xl font-extrabold text-emerald-400">₹{booking.amount?.toLocaleString('en-IN')}</span>
+              </div>
+            </motion.div>
+          )}
+
+          <motion.button
+            onClick={() => navigate('/dashboard')}
+            whileHover={{ scale: 1.04, boxShadow: '0 0 40px rgba(52,211,153,0.5)' }}
+            whileTap={tap}
+            className="relative w-full py-4 rounded-xl font-bold text-white overflow-hidden"
+            style={{ background: 'linear-gradient(135deg,#059669,#34d399,#3b82f6)', boxShadow: '0 0 30px rgba(52,211,153,0.35)' }}
+          >
+            <motion.div className="absolute inset-0 pointer-events-none"
+              style={{ background: 'linear-gradient(105deg,transparent 40%,rgba(255,255,255,0.15) 50%,transparent 60%)' }}
+              animate={{ x: ['-100%', '200%'] }} transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }} />
+            <span className="relative z-10">🏠 Go to Dashboard</span>
+          </motion.button>
+        </div>
       </motion.div>
-    </motion.div>
+    </AnimatedBackground>
   );
 };
 

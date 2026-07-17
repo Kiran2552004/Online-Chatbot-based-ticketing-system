@@ -16,6 +16,9 @@ import AdminPanel from './pages/AdminPanel';
 import BookingSuccess from './pages/BookingSuccess';
 import BookingCancelled from './pages/BookingCancelled';
 import BookingHistory from './pages/BookingHistory';
+import SupportTicketForm from './pages/SupportTicketForm';
+import MyTickets from './pages/MyTickets';
+import TicketDetails from './pages/TicketDetails';
 
 function AppRoutes() {
   const location = useLocation();
@@ -119,6 +122,36 @@ function AppRoutes() {
             <PageTransition>
               <BookingCancelled />
             </PageTransition>
+          }
+        />
+        <Route
+          path="/support-ticket"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <SupportTicketForm />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-tickets"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <MyTickets />
+              </PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/my-tickets/:id"
+          element={
+            <ProtectedRoute>
+              <PageTransition>
+                <TicketDetails />
+              </PageTransition>
+            </ProtectedRoute>
           }
         />
         <Route path="*" element={<Navigate to="/" replace />} />

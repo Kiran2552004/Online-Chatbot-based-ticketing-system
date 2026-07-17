@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../services/api';
 import { AuthContext } from '../context/AuthContext';
-import { slideInLeft, slideInRight, zoomIn, typingDots, dot, fadeIn, staggerContainer } from './animations/motions';
+import { slideInLeft, slideInRight, zoomIn, typingDots, dot, staggerContainer } from './animations/motions';
+import AnimatedBackground from './AnimatedBackground';
 
 const ChatbotWindow = () => {
   const [messages, setMessages] = useState([
@@ -171,7 +172,7 @@ const ChatbotWindow = () => {
       // Prevent any popups - handle error silently in chat
       console.error('Payment error:', error);
       setLoading(false);
-      
+
       // Add error message to chat instead of showing popup
       const errorMessage = error.response?.data?.message || 'Unable to process payment at this time. Please try again later or contact support.';
       const errorBotMessage = {
@@ -191,12 +192,7 @@ const ChatbotWindow = () => {
   };
 
   return (
-    <motion.div
-      className="min-h-screen bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50 py-8 px-4 relative overflow-hidden"
-      initial="hidden"
-      animate="show"
-      variants={zoomIn}
-    >
+    <AnimatedBackground variant="purple" className="py-8 px-4">
       {/* Floating bot avatar */}
       <motion.div
         className="fixed bottom-6 right-6 z-50 hidden md:block"
@@ -231,50 +227,43 @@ const ChatbotWindow = () => {
         </motion.div>
       </motion.div>
 
-      <div className="max-w-2xl mx-auto relative z-10">
+      <div className="max-w-2xl mx-auto">
         <motion.div
-          className="bg-white/80 backdrop-blur-xl rounded-3xl shadow-2xl overflow-hidden border border-white/20"
-          initial={{ scale: 0.9, opacity: 0 }}
+          className="rounded-3xl shadow-2xl overflow-hidden"
+          style={{
+            background: 'rgba(10,5,28,0.85)',
+            border: '1px solid rgba(139,92,246,0.28)',
+            backdropFilter: 'blur(28px)',
+            boxShadow: '0 0 80px rgba(139,92,246,0.15), 0 40px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.07)',
+          }}
+          initial={{ scale: 0.93, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
           {/* Header */}
-          <motion.div
-            className="bg-gradient-to-r from-purple-600 via-blue-600 to-indigo-600 text-white p-6 relative overflow-hidden"
-            initial={{ y: -50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.2 }}
+          <div
+            className="text-white p-6 relative overflow-hidden"
+            style={{ background: 'linear-gradient(135deg,rgba(139,92,246,0.5),rgba(99,102,241,0.4),rgba(236,72,153,0.35))' }}
           >
-            <motion.div
-              className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full"
-              animate={{
-                translateX: ['0%', '200%'],
-              }}
-              transition={{
-                duration: 3,
-                repeat: Infinity,
-                repeatDelay: 2,
-              }}
-            />
-            <div className="relative z-10">
-              <div className="flex items-center gap-3">
-                <motion.div
-                  animate={{ rotate: [0, 10, -10, 0] }}
-                  transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }}
-                  className="text-3xl"
-                >
-                  🤖
-                </motion.div>
-                <div>
-                  <h2 className="text-2xl font-bold">AI Assistant</h2>
-                  <p className="text-purple-100 text-sm mt-1">Bengaluru Museum Ticketing Support</p>
-                </div>
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-64 h-20 pointer-events-none"
+              style={{ background: 'radial-gradient(ellipse,rgba(255,255,255,0.1) 0%,transparent 70%)', filter: 'blur(12px)' }} />
+            <motion.div className="absolute inset-0"
+              style={{ background: 'linear-gradient(to right,transparent,rgba(255,255,255,0.06),transparent)' }}
+              animate={{ translateX: ['0%', '200%'] }}
+              transition={{ duration: 3, repeat: Infinity, repeatDelay: 2 }} />
+            <div className="relative z-10 flex items-center gap-3">
+              <motion.div animate={{ rotate: [0, 10, -10, 0] }} transition={{ duration: 0.5, repeat: Infinity, repeatDelay: 3 }} className="text-3xl">🤖</motion.div>
+              <div>
+                <h2 className="text-2xl font-bold">AI Assistant</h2>
+                <p className="text-purple-200 text-sm mt-0.5">Bengaluru Museum Ticketing Support</p>
               </div>
             </div>
-          </motion.div>
+            <div className="absolute bottom-0 left-8 right-8 h-px" style={{ background: 'linear-gradient(to right,transparent,rgba(255,255,255,0.2),transparent)' }} />
+          </div>
 
           {/* Messages */}
-          <div className="h-[500px] overflow-y-auto p-6 space-y-4 bg-gradient-to-b from-gray-50 to-white scrollbar-thin scrollbar-thumb-purple-300 scrollbar-track-transparent">
+          <div className="h-[500px] overflow-y-auto p-6 space-y-4 scrollbar-thin scrollbar-thumb-purple-700 scrollbar-track-transparent"
+            style={{ background: 'linear-gradient(to bottom,rgba(10,5,28,0.6),rgba(15,5,40,0.8))' }}>
             <AnimatePresence>
               {messages.map((msg) => (
                 <motion.div
@@ -287,16 +276,23 @@ const ChatbotWindow = () => {
                   layout
                 >
                   <motion.div
-                    className={`max-w-[80%] rounded-3xl p-4 relative ${
-                      msg.sender === 'user'
-                        ? 'bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg'
-                        : 'bg-white/90 backdrop-blur-sm text-gray-800 shadow-lg border border-gray-100'
-                    }`}
+                    className={`max-w-[80%] rounded-3xl p-4 relative ${msg.sender === 'user'
+                      ? 'text-white shadow-lg'
+                      : 'text-white shadow-lg'
+                      }`}
+                    style={msg.sender === 'user' ? {
+                      background: 'linear-gradient(135deg,#7c3aed,#a855f7)',
+                      boxShadow: '0 4px 20px rgba(139,92,246,0.35)',
+                    } : {
+                      background: 'rgba(255,255,255,0.08)',
+                      border: '1px solid rgba(139,92,246,0.2)',
+                      backdropFilter: 'blur(8px)',
+                    }}
                     whileHover={{ scale: 1.02 }}
                     transition={{ duration: 0.2 }}
                   >
                     <p className="whitespace-pre-wrap leading-relaxed">{msg.text}</p>
-                    <p className={`text-xs mt-2 ${msg.sender === 'user' ? 'text-blue-100' : 'text-gray-500'}`}>
+                    <p className={`text-xs mt-2 ${msg.sender === 'user' ? 'text-purple-200' : 'text-purple-400'}`}>
                       {new Date(msg.timestamp).toLocaleTimeString()}
                     </p>
                   </motion.div>
@@ -313,7 +309,7 @@ const ChatbotWindow = () => {
                   exit={{ opacity: 0, scale: 0.8 }}
                   className="flex justify-start"
                 >
-                  <div className="bg-white/90 backdrop-blur-sm rounded-3xl p-4 shadow-lg border border-gray-100">
+                  <div className="rounded-3xl p-4 shadow-lg" style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(139,92,246,0.2)' }}>
                     <motion.div className="flex space-x-2" variants={typingDots} initial="animate" animate="animate">
                       {[0, 1, 2].map((i) => (
                         <motion.div
@@ -335,20 +331,24 @@ const ChatbotWindow = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-purple-100"
+                  className="rounded-2xl p-4 shadow-lg"
+                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(139,92,246,0.2)', backdropFilter: 'blur(8px)' }}
                 >
-                  <p className="text-sm font-medium text-gray-700 mb-3">Select a museum:</p>
+                  <p className="text-sm font-medium text-purple-300 mb-3">Select a museum:</p>
                   <div className="space-y-2 max-h-48 overflow-y-auto">
                     {museums.map((museum) => (
                       <motion.button
                         key={museum._id}
                         onClick={() => handleMuseumSelect(museum)}
-                        whileHover={{ scale: 1.02, x: 5 }}
+                        whileHover={{ scale: 1.02, x: 4 }}
                         whileTap={{ scale: 0.98 }}
-                        className="w-full text-left p-3 bg-gradient-to-r from-gray-50 to-purple-50/50 hover:from-purple-50 hover:to-blue-50 rounded-xl border border-gray-200 hover:border-purple-300 transition-all"
+                        className="w-full text-left p-3 rounded-xl transition-all"
+                        style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.2)' }}
+                        onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(139,92,246,0.2)')}
+                        onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(139,92,246,0.1)')}
                       >
-                        <div className="font-semibold text-gray-800">{museum.name}</div>
-                        <div className="text-sm text-gray-600">₹{museum.price} per ticket</div>
+                        <div className="font-semibold text-white">{museum.name}</div>
+                        <div className="text-sm text-purple-400">₹{museum.price} per ticket</div>
                       </motion.button>
                     ))}
                   </div>
@@ -360,22 +360,25 @@ const ChatbotWindow = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-purple-100"
+                  className="rounded-2xl p-4 shadow-lg"
+                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(139,92,246,0.2)', backdropFilter: 'blur(8px)' }}
                 >
-                  <p className="text-sm font-medium text-gray-700 mb-3">Select date:</p>
+                  <p className="text-sm font-medium text-purple-300 mb-3">Select date:</p>
                   <input
                     type="date"
                     min={getMinDate()}
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
-                    className="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-xl outline-none transition-all"
+                    style={{ background: 'rgba(139,92,246,0.1)', border: '1px solid rgba(139,92,246,0.3)', color: 'white', colorScheme: 'dark' }}
                   />
                   <div className="flex gap-3 mt-3">
                     <motion.button
                       onClick={handleGoBack}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-semibold transition-all shadow-md"
+                      className="flex-1 py-3 rounded-xl font-semibold transition-all text-purple-300 hover:text-white"
+                      style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
                     >
                       ← Go Back
                     </motion.button>
@@ -397,32 +400,26 @@ const ChatbotWindow = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  className="bg-white/90 backdrop-blur-sm rounded-2xl p-4 shadow-lg border border-purple-100"
+                  className="rounded-2xl p-4 shadow-lg"
+                  style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(139,92,246,0.2)', backdropFilter: 'blur(8px)' }}
                 >
-                  <p className="text-sm font-medium text-gray-700 mb-3">Number of tickets:</p>
+                  <p className="text-sm font-medium text-purple-300 mb-3">Number of tickets:</p>
                   <div className="flex items-center justify-center space-x-4">
-                    <motion.button
-                      onClick={() => handleTicketCountChange(-1)}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="w-12 h-12 bg-gray-200 hover:bg-gray-300 rounded-full font-bold text-lg transition-all shadow-md"
-                    >
+                    <motion.button onClick={() => handleTicketCountChange(-1)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                      className="w-12 h-12 rounded-full font-bold text-lg transition-all text-white"
+                      style={{ background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.3)' }}>
                       -
                     </motion.button>
-                    <motion.span
-                      className="text-3xl font-bold text-gray-800 w-16 text-center"
+                    <motion.span className="text-3xl font-bold text-white w-16 text-center"
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       transition={{ type: 'spring', stiffness: 300 }}
                     >
                       {ticketCount}
                     </motion.span>
-                    <motion.button
-                      onClick={() => handleTicketCountChange(1)}
-                      whileHover={{ scale: 1.1 }}
-                      whileTap={{ scale: 0.9 }}
-                      className="w-12 h-12 bg-gray-200 hover:bg-gray-300 rounded-full font-bold text-lg transition-all shadow-md"
-                    >
+                    <motion.button onClick={() => handleTicketCountChange(1)} whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}
+                      className="w-12 h-12 rounded-full font-bold text-lg transition-all text-white"
+                      style={{ background: 'rgba(139,92,246,0.2)', border: '1px solid rgba(139,92,246,0.3)' }}>
                       +
                     </motion.button>
                   </div>
@@ -431,7 +428,8 @@ const ChatbotWindow = () => {
                       onClick={handleGoBack}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-semibold transition-all shadow-md"
+                      className="flex-1 py-3 rounded-xl font-semibold transition-all text-purple-300 hover:text-white"
+                      style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
                     >
                       ← Go Back
                     </motion.button>
@@ -452,17 +450,18 @@ const ChatbotWindow = () => {
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.9 }}
-                  className="bg-gradient-to-r from-green-50 via-emerald-50 to-blue-50 rounded-2xl p-5 shadow-xl border-2 border-green-300"
+                  className="rounded-2xl p-5 shadow-xl"
+                  style={{ background: 'linear-gradient(135deg,rgba(52,211,153,0.12),rgba(99,102,241,0.1))', border: '2px solid rgba(52,211,153,0.3)' }}
                 >
-                  <p className="text-sm font-bold text-gray-800 mb-4">Booking Summary:</p>
+                  <p className="text-sm font-bold text-white mb-4">Booking Summary:</p>
                   <div className="space-y-2 text-sm mb-4">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Museum:</span>
-                      <span className="font-semibold">{payload.museumName}</span>
+                      <span className="text-purple-300">Museum:</span>
+                      <span className="font-semibold text-white">{payload.museumName}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Date:</span>
-                      <span className="font-semibold">
+                      <span className="text-purple-300">Date:</span>
+                      <span className="font-semibold text-white">
                         {new Date(payload.date).toLocaleDateString('en-IN', {
                           weekday: 'long',
                           year: 'numeric',
@@ -472,8 +471,8 @@ const ChatbotWindow = () => {
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Tickets:</span>
-                      <span className="font-semibold">{payload.ticketCount}</span>
+                      <span className="text-purple-300">Tickets:</span>
+                      <span className="font-semibold text-white">{payload.ticketCount}</span>
                     </div>
                     <div className="flex justify-between border-t pt-2 mt-2">
                       <span className="text-gray-800 font-bold">Total Amount:</span>
@@ -487,7 +486,8 @@ const ChatbotWindow = () => {
                       onClick={handleGoBack}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-700 py-3 rounded-xl font-semibold transition-all shadow-md"
+                      className="flex-1 py-3 rounded-xl font-semibold transition-all text-purple-300 hover:text-white"
+                      style={{ background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.12)' }}
                     >
                       ← Go Back
                     </motion.button>
@@ -520,11 +520,9 @@ const ChatbotWindow = () => {
           </div>
 
           {/* Input */}
-          <motion.div
-            className="p-4 bg-white/80 backdrop-blur-sm border-t border-gray-200"
-            initial={{ y: 50, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            transition={{ delay: 0.3 }}
+          <div
+            className="p-4 border-t"
+            style={{ background: 'rgba(10,5,28,0.9)', borderColor: 'rgba(139,92,246,0.2)' }}
           >
             <form
               onSubmit={(e) => {
@@ -550,9 +548,12 @@ const ChatbotWindow = () => {
                   onBlur={() => setInputFocused(false)}
                   placeholder="Type your message..."
                   disabled={loading || nextAction === 'ASK_MUSEUM' || nextAction === 'ASK_DATE' || nextAction === 'ASK_TICKETS' || nextAction === 'CONFIRM_BOOKING'}
-                  className={`w-full px-5 py-4 border-2 rounded-2xl focus:ring-2 focus:ring-purple-500 focus:border-purple-500 outline-none transition-all disabled:bg-gray-100 ${
-                    inputFocused ? 'border-purple-400 shadow-lg shadow-purple-200' : 'border-gray-300'
-                  }`}
+                  className={`w-full px-5 py-4 rounded-2xl outline-none transition-all text-white placeholder-purple-500/60 ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                  style={{
+                    background: 'rgba(139,92,246,0.1)',
+                    border: inputFocused ? '1px solid rgba(139,92,246,0.6)' : '1px solid rgba(139,92,246,0.25)',
+                    boxShadow: inputFocused ? '0 0 20px rgba(139,92,246,0.2)' : 'none',
+                  }}
                 />
               </motion.div>
               <motion.button
@@ -565,11 +566,12 @@ const ChatbotWindow = () => {
                 Send
               </motion.button>
             </form>
-          </motion.div>
+          </div>
         </motion.div>
       </div>
-    </motion.div>
+    </AnimatedBackground>
   );
 };
 
 export default ChatbotWindow;
+

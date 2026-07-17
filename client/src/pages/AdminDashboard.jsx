@@ -257,10 +257,7 @@ const AdminDashboard = () => {
                 />
                 <select
                   value={bookingFilters.status}
-                  onChange={(e) => {
-                    setBookingFilters({ ...bookingFilters, status: e.target.value });
-                    setTimeout(() => fetchData(), 100);
-                  }}
+                  onChange={(e) => setBookingFilters({ ...bookingFilters, status: e.target.value })}
                   className="px-4 py-2 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
                 >
                   <option value="">All Status</option>
@@ -271,10 +268,7 @@ const AdminDashboard = () => {
                 <input
                   type="date"
                   value={bookingFilters.date}
-                  onChange={(e) => {
-                    setBookingFilters({ ...bookingFilters, date: e.target.value });
-                    setTimeout(() => fetchData(), 100);
-                  }}
+                  onChange={(e) => setBookingFilters({ ...bookingFilters, date: e.target.value })}
                   className="px-4 py-2 border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
                 />
                 <motion.button
