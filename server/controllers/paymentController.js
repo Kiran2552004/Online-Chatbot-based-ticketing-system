@@ -1,6 +1,4 @@
 import Stripe from 'stripe';
-import { fileURLToPath } from 'url';
-import { dirname } from 'path';
 import MuseumBooking from '../models/MuseumBooking.js';
 import Museum from '../models/Museum.js';
 import { generateBookingId } from '../utils/generateBookingId.js';
@@ -124,104 +122,153 @@ export const createCheckoutSession = async (req, res) => {
 // @desc    Verify payment and update booking
 // @route   POST /api/payment/verify-payment
 // @access  Private
+// @desc    Verify payment and update booking
+// @route   POST /api/payment/verify-payment
+// @access  Private
 export const verifyPayment = async (req, res) => {
   try {
     const { sessionId } = req.body;
 
     if (!sessionId) {
-      return res.status(400).json({ success: false, message: 'Session ID is required' });
+      return res.status(400).json({
+        success: false,
+        message: "Session ID is required",
+      });
     }
 
-    // Retrieve the session from Stripe
+    // Retrieve Stripe session
     const stripe = getStripe();
     const session = await stripe.checkout.sessions.retrieve(sessionId);
 
-    if (session.payment_status === 'paid') {
-      // Find booking by booking ID from metadata
-      const bookingId = session.metadata?.bookingId;
-      if (!bookingId) {
-        return res.status(404).json({ success: false, message: 'Booking not found' });
+    if (session.payment_status !== "paid") {
+      return res.status(400).json({
+        success: false,
+        message: "Payment not completed",
+      });
+    }
+
+    // Find booking
+    const bookingId = session.metadata?.bookingId;
+
+    if (!bookingId) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    let booking = await MuseumBooking.findOne({ bookingId })
+      .populate("museum", "name location imageUrl")
+      .populate("user", "name email");
+
+    if (!booking) {
+      return res.status(404).json({
+        success: false,
+        message: "Booking not found",
+      });
+    }
+
+    // Update booking only once
+    if (booking.paymentStatus !== "paid") {
+      const updatedBooking = await MuseumBooking.findOneAndUpdate(
+        {
+          _id: booking._id,
+          paymentStatus: { $ne: "paid" },
+        },
+        {
+          $set: {
+            paymentStatus: "paid",
+            stripePaymentIntentId: sessionId,
+          },
+        },
+        {
+          new: true,
+        }
+      )
+        .populate("museum", "name location imageUrl")
+        .populate("user", "name email");
+
+      if (updatedBooking) {
+        booking = updatedBooking;
       }
+    }
 
-      let booking = await MuseumBooking.findOne({ bookingId })
-        .populate('museum', 'name location imageUrl')
-        .populate('user', 'name email');
+    // ==========================
+    // SEND RESPONSE IMMEDIATELY
+    // ==========================
+    res.json({
+      success: true,
+      data: booking,
+    });
 
-      if (!booking) {
-        return res.status(404).json({ success: false, message: 'Booking not found' });
-      }
+    // ==========================
+    // BACKGROUND TASK
+    // ==========================
+    (async () => {
+      try {
+        // Skip if PDF already generated
+        if (booking.pdfUrl) {
+          return;
+        }
 
-      // Update booking status if not already paid
-      if (booking.paymentStatus !== 'paid') {
-        // Use atomic update to prevent race conditions that could trigger double emails
-        const updatedBooking = await MuseumBooking.findOneAndUpdate(
-          { _id: booking._id, paymentStatus: { $ne: 'paid' } },
-          { $set: { paymentStatus: 'paid', stripePaymentIntentId: sessionId } },
-          { new: true }
-        )
-          .populate('museum', 'name location imageUrl')
-          .populate('user', 'name email');
+        const user = await User.findById(booking.user._id || booking.user);
 
-        if (updatedBooking) {
-          booking = updatedBooking;
+        const pdfPath = await generateTicketPDF({
+          bookingId: booking.bookingId,
+          userName: user.name,
+          museumName: booking.museum.name,
+          date: booking.date,
+          ticketCount: booking.ticketCount,
+          amount: booking.amount,
+        });
 
-          // Generate PDF ticket
-          try {
-            const user = await User.findById(booking.user._id || booking.user);
-            const pdfPath = await generateTicketPDF({
-              bookingId: booking.bookingId,
-              userName: user.name,
+        booking.pdfUrl = `/api/tickets/${booking.bookingId}`;
+        await booking.save();
+
+        if (user?.email) {
+          await sendTicketEmail(
+            user.email,
+            {
               museumName: booking.museum.name,
               date: booking.date,
               ticketCount: booking.ticketCount,
               amount: booking.amount,
+              bookingId: booking.bookingId,
+              userName: user.name,
+            },
+            pdfPath
+          );
+        }
+      } catch (err) {
+        console.error("Background task failed:", err);
+
+        try {
+          const user = await User.findById(booking.user._id || booking.user);
+
+          if (user?.email) {
+            await sendBookingConfirmation(user.email, {
+              museumName: booking.museum.name,
+              date: booking.date,
+              ticketCount: booking.ticketCount,
+              amount: booking.amount,
+              bookingId: booking.bookingId,
             });
-
-            // Set PDF URL
-            booking.pdfUrl = `/api/tickets/${booking.bookingId}`;
-
-            await booking.save();
-
-            // Send email with PDF attachment
-            if (user && user.email) {
-              await sendTicketEmail(user.email, {
-                museumName: booking.museum.name,
-                date: booking.date,
-                ticketCount: booking.ticketCount,
-                amount: booking.amount,
-                bookingId: booking.bookingId,
-                userName: user.name,
-              }, pdfPath);
-            }
-          } catch (pdfError) {
-            console.error('PDF generation error:', pdfError);
-            // Still save booking even if PDF generation fails
-            await booking.save();
-            // Send regular confirmation email as fallback
-            const user = await User.findById(booking.user._id || booking.user);
-            if (user && user.email) {
-              await sendBookingConfirmation(user.email, {
-                museumName: booking.museum.name,
-                date: booking.date,
-                ticketCount: booking.ticketCount,
-                amount: booking.amount,
-                bookingId: booking.bookingId,
-              });
-            }
           }
+        } catch (emailError) {
+          console.error("Fallback email failed:", emailError);
         }
       }
+    })();
 
-      res.json({
-        success: true,
-        data: booking,
-      });
-    } else {
-      res.status(400).json({ success: false, message: 'Payment not completed' });
-    }
+    return;
   } catch (error) {
-    console.error('Payment verification error:', error);
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Payment verification error:", error);
+
+    if (!res.headersSent) {
+      return res.status(500).json({
+        success: false,
+        message: error.message,
+      });
+    }
   }
 };
-
