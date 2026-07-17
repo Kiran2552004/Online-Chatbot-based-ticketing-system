@@ -106,11 +106,11 @@ function AppRoutes() {
         <Route
           path="/booking-success"
           element={
-            <ProtectedRoute>
+            
               <PageTransition>
                 <BookingSuccess />
               </PageTransition>
-            </ProtectedRoute>
+            
           }
         />
         <Route
